@@ -14,6 +14,9 @@ class Action(QtGui.QAction):
         self.finished_setup = False
         self.is_available = is_available or (lambda: True)
 
+    def refresh(self):
+        self.setEnabled(bool(self.is_available()))
+
     def setup(self, parent):
         if self.finished_setup:
             return
@@ -22,12 +25,15 @@ class Action(QtGui.QAction):
         if self.undo:
             def execute():
                 parent.currentDocument().undo_stack.push(self.command())
+                parent.refresh()
         else:
-            execute = self.redo
+            execute = lambda: self.redo() and parent.refresh()
 
         self.triggered.connect(execute)
         if self.hotkey:
             QtGui.QShortcut(self.hotkey, parent, execute)
+
+        self.refresh()
 
     def command(self):
         command = QtGui.QUndoCommand(self.text(), None)
@@ -133,6 +139,7 @@ class MainWindow(QtGui.QMainWindow):
         contents.setHtml(text)
         contents.undo_stack = QtGui.QUndoStack()
         self.centralWidget().addTab(contents, label)
+        self.refresh()
         return contents
 
     def newDocument(self):
@@ -149,7 +156,7 @@ class MainWindow(QtGui.QMainWindow):
 
     def refresh(self):
         for action in self.actions:
-            action.setEnabled(action.is_available())
+            action.refresh()
 
 
 if __name__ == '__main__':
@@ -166,7 +173,7 @@ if __name__ == '__main__':
                Action('A1', p('did a1'), hotkey='1'),
                None,
                Action('A2', p('did a2'), p('undid a2'), hotkey='2'),
-               Action('A3', p('did a3'), p('undid a3'), hotkey='3'),
+               Action('A3', p('did a3'), p('undid a3'), is_available=main_window.currentDocument),
                Action('A4', p('did a4'), p('undid a4'), hotkey='4'),
                Action('A5', p('did a5'), p('undid a5'), hotkey='5'),
                None,
