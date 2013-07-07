@@ -35,47 +35,16 @@ class Action(QtGui.QAction):
         self.redo = redo
         self.undo = undo
         self.shortcut = shortcut
-        self.finished_setup = False
         self.is_available = is_available or (lambda: True)
         self.setShortcut(shortcut)
+        self.triggered.connect(lambda: self.parent().execute(redo, undo, label))
 
     def refresh(self):
         """
         Updates the availability of this action.
         """
-        if self.undo:
-            has_document = bool(self.parent().currentDocument())
-            self.setEnabled(has_document and bool(self.is_available()))
-        else:
-            self.setEnabled(bool(self.is_available()))
-
-    def setup(self, parent):
-        """
-        Connects this action to the given MainWindow parent.
-        """
-        if self.finished_setup:
-            return
-        self.finished_setup = True
-
-        if self.undo:
-            def execute():
-                parent.currentDocument().undo_stack.push(self.command())
-                parent.refresh()
-        else:
-            execute = lambda: self.redo() and parent.refresh()
-
-        self.triggered.connect(execute)
-        self.setParent(parent)
-        self.refresh()
-
-    def command(self):
-        """
-        Creates a new QUndoCommand equivalent to this action.
-        """
-        command = QtGui.QUndoCommand(self.text(), None)
-        command.redo = self.redo
-        command.undo = self.undo
-        return command 
+        has_target = not self.undo or self.parent().currentDocument()
+        self.setEnabled(bool(has_target and self.is_available()))
 
 
 class Tabbed(QtGui.QTabWidget):
@@ -170,9 +139,10 @@ class MainWindow(QtGui.QMainWindow):
                 bar.addSeparator()
                 continue
 
-            self.actions.add(action)
             bar.addAction(action)
-            action.setup(self)
+            self.actions.add(action)
+            action.setParent(self)
+            action.refresh()
 
     def addDocument(self, document):
         """
@@ -206,6 +176,17 @@ class MainWindow(QtGui.QMainWindow):
 
         for action in self.actions:
             action.refresh()
+
+    def execute(self, redo, undo=None, text=''):
+        if undo:
+            command = QtGui.QUndoCommand(text, self)
+            command.redo = redo
+            command.undo = undo
+            self.currentDocument().undo_stack.push(command)
+        else:
+            redo()
+
+        self.refresh()
 
     def loadState(self):
         settings = QtCore.QSettings(self.base_title, '')
