@@ -36,7 +36,7 @@ Detailed Features
   - Support for label, redo and undo functions
   - Ctrl+Z and Ctrl+Shift+Z automatically undo and redo the last actions
   - Undo stack is kept in a per-document basis
-  - Actions have application-wide shortcuts, regardless of toolbar visibility
+  - Actions can have shortcuts
   - Empty actions are rendered as separators
   - Actions without undo are considered global
   - Availability defined by user-supplied function and automatically refreshed

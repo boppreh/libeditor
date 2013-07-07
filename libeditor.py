@@ -4,15 +4,16 @@ from PyQt4 import QtCore, QtGui, QtWebKit
 class Action(QtGui.QAction):
     """
     Class for Actions that can be displayed on toolbars and menus, triggered
-    by hotkey and undone/redone.
+    by shortcut and undone/redone.
     """
-    def __init__(self, label, redo, undo=None, hotkey=None, is_available=None):
+    def __init__(self, label, redo, undo=None, shortcut=None, is_available=None):
         QtGui.QAction.__init__(self, label, None)
         self.redo = redo
         self.undo = undo
-        self.hotkey = hotkey
+        self.shortcut = shortcut
         self.finished_setup = False
         self.is_available = is_available or (lambda: True)
+        self.setShortcut(shortcut)
 
     def refresh(self):
         """
@@ -40,9 +41,6 @@ class Action(QtGui.QAction):
             execute = lambda: self.redo() and parent.refresh()
 
         self.triggered.connect(execute)
-        if self.hotkey:
-            QtGui.QShortcut(self.hotkey, parent, execute)
-
         self.setParent(parent)
         self.refresh()
 
@@ -174,9 +172,16 @@ class MainWindow(QtGui.QMainWindow):
         return self.centralWidget().currentWidget()
 
     def refresh(self):
-        document_label = self.centralWidget().title()
-        new_title = '{} - {}'.format(document_label, self.base_title)
+        """
+        Updates the title and action availability.
+        """
+        if self.currentDocument():
+            document_label = self.centralWidget().title()
+            new_title = '{} - {}'.format(document_label, self.base_title)
+        else:
+            new_title = self.base_title
         self.setWindowTitle(new_title)
+
         for action in self.actions:
             action.refresh()
 
@@ -192,15 +197,15 @@ if __name__ == '__main__':
         return print_ 
 
     actions = [
-               Action('A1', p('did a1'), hotkey='1'),
+               Action('A1', p('did a1'), shortcut='1'),
                None,
-               Action('A2', p('did a2'), p('undid a2'), hotkey='2'),
-               Action('A3', p('did a3'), p('undid a3'), hotkey='3'),
-               Action('A4', p('did a4'), p('undid a4'), hotkey='4'),
-               Action('A5', p('did a5'), p('undid a5'), hotkey='5'),
+               Action('A2', p('did a2'), p('undid a2'), shortcut='2'),
+               Action('A3', p('did a3'), p('undid a3'), shortcut='3'),
+               Action('A4', p('did a4'), p('undid a4'), shortcut='4'),
+               Action('A5', p('did a5'), p('undid a5'), shortcut='5'),
               ]
 
-    main_window.addToolbar('Toolbar 1', actions)
+    main_window.addMenu('Toolbar 1', actions)
 
     for path in sys.argv[1:]:
         main_window.add(open(path).read(), os.path.basename(path))
