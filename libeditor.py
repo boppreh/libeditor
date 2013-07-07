@@ -15,9 +15,15 @@ class Action(QtGui.QAction):
         self.is_available = is_available or (lambda: True)
 
     def refresh(self):
+        """
+        Updates the availability of this action.
+        """
         self.setEnabled(bool(self.is_available()))
 
     def setup(self, parent):
+        """
+        Connects this action to the given MainWindow parent.
+        """
         if self.finished_setup:
             return
         self.finished_setup = True
@@ -36,6 +42,9 @@ class Action(QtGui.QAction):
         self.refresh()
 
     def command(self):
+        """
+        Creates a new QUndoCommand equivalent to this action.
+        """
         command = QtGui.QUndoCommand(self.text(), None)
         command.redo = self.redo
         command.undo = self.undo
