@@ -18,7 +18,11 @@ class Action(QtGui.QAction):
         """
         Updates the availability of this action.
         """
-        self.setEnabled(bool(self.is_available()))
+        if self.undo:
+            has_document = bool(self.parent().currentDocument())
+            self.setEnabled(has_document and bool(self.is_available()))
+        else:
+            self.setEnabled(bool(self.is_available()))
 
     def setup(self, parent):
         """
@@ -39,6 +43,7 @@ class Action(QtGui.QAction):
         if self.hotkey:
             QtGui.QShortcut(self.hotkey, parent, execute)
 
+        self.setParent(parent)
         self.refresh()
 
     def command(self):
@@ -78,6 +83,7 @@ class Tabbed(QtGui.QTabWidget):
                 button.setVisible(i == new_tab)
 
         self.tabBar().setVisible(self.count() > 1)
+        self.parent().refresh()
 
     def _close_tab(self, tab):
         self.removeTab(tab)
@@ -91,6 +97,9 @@ class Tabbed(QtGui.QTabWidget):
     def addTab(self, widget, title):
         self._update_tab(QtGui.QTabWidget.addTab(self, widget, title))
 
+    def title(self):
+        return self.tabText(self.currentIndex())
+
 
 class MainWindow(QtGui.QMainWindow):
     """
@@ -102,6 +111,7 @@ class MainWindow(QtGui.QMainWindow):
         self.setWindowTitle(title)
         self.setCentralWidget(Tabbed())
 
+        self.base_title = title
         self.untitled_count = 0
         self.actions = set()
 
@@ -164,6 +174,9 @@ class MainWindow(QtGui.QMainWindow):
         return self.centralWidget().currentWidget()
 
     def refresh(self):
+        document_label = self.centralWidget().title()
+        new_title = '{} - {}'.format(document_label, self.base_title)
+        self.setWindowTitle(new_title)
         for action in self.actions:
             action.refresh()
 
@@ -182,11 +195,9 @@ if __name__ == '__main__':
                Action('A1', p('did a1'), hotkey='1'),
                None,
                Action('A2', p('did a2'), p('undid a2'), hotkey='2'),
-               Action('A3', p('did a3'), p('undid a3'), is_available=main_window.currentDocument),
+               Action('A3', p('did a3'), p('undid a3'), hotkey='3'),
                Action('A4', p('did a4'), p('undid a4'), hotkey='4'),
                Action('A5', p('did a5'), p('undid a5'), hotkey='5'),
-               None,
-               Action('Disable', main_window.refresh),
               ]
 
     main_window.addToolbar('Toolbar 1', actions)
