@@ -11,6 +11,22 @@ class Action(QtGui.QAction):
         self.redo = redo
         self.undo = undo
         self.hotkey = hotkey
+        self.finished_setup = False
+
+    def setup(self, parent):
+        if self.finished_setup:
+            return
+        self.finished_setup = True
+
+        if self.undo:
+            def execute():
+                parent.currentDocument().undo_stack.push(self.command())
+        else:
+            execute = self.redo
+
+        self.triggered.connect(execute)
+        if self.hotkey:
+            QtGui.QShortcut(self.hotkey, parent, execute)
 
     def command(self):
         command = QtGui.QUndoCommand(self.text(), None)
@@ -101,15 +117,7 @@ class MainWindow(QtGui.QMainWindow):
                 continue
 
             bar.addAction(action)
-            if action.undo:
-                def execute(checked=None, action=action):
-                    self.currentDocument().undo_stack.push(action.command())
-            else:
-                execute = action.redo
-
-            action.triggered.connect(execute)
-            if action.hotkey:
-                QtGui.QShortcut(action.hotkey, self, execute)
+            action.setup(self)
 
 
     def addDocument(self, text, label=None):
@@ -159,6 +167,7 @@ if __name__ == '__main__':
               ]
 
     main_window.addToolbar('Toolbar 1', actions)
+    main_window.addMenu('Menu 1', actions)
 
     for path in sys.argv[1:]:
         main_window.add(open(path).read(), os.path.basename(path))
