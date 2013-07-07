@@ -1,4 +1,5 @@
 from PyQt4 import QtCore, QtGui, QtWebKit
+import re
 
 class Document(QtWebKit.QWebView):
     """
@@ -27,7 +28,10 @@ class Action(QtGui.QAction):
     by shortcut.
     """
     def __init__(self, function, label=None, shortcut=None, is_available=None):
-        label = label or function.func_name.replace('_', ' ').title()
+        if label is None:
+            fname = function.__name__
+            words = re.sub('([A-Z])', r' \1', fname).replace('_', ' ')
+            label = words.strip().title()
         self.function = function
         self.is_available = is_available or (lambda doc: True)
 
@@ -48,7 +52,8 @@ class Action(QtGui.QAction):
         """
         Updates the availability of this action.
         """
-        self.setEnabled(self.is_available(self.parent().currentDocument()))
+        doc = self.parent().currentDocument()
+        self.setEnabled(bool(self.is_available(doc)))
 
 
 class Tabbed(QtGui.QTabWidget):
@@ -195,6 +200,7 @@ class MainWindow(QtGui.QMainWindow):
     def run(self):
         self.loadState()
         self.show()
+        self.refresh()
         exit(self.app.exec_())
 
 
@@ -203,12 +209,33 @@ if __name__ == '__main__':
     import sys, os
     main_window = MainWindow('Structured Editor')
 
-    def p(s):
-        def print_(doc):
-            print(s)
-        return print_ 
+    class ClearCommand(QtGui.QUndoCommand):
+        def __init__(self, doc):
+            QtGui.QUndoCommand.__init__(self)
+            self.doc = doc
+            self.old_text = doc.page().mainFrame().toHtml()
 
-    main_window.addToolbar('Toolbar 1', map(Action, [p('a1'), p('a2')]))
+        def redo(self):
+            self.doc.setHtml('')
+
+        def undo(self):
+            self.doc.setHtml(self.old_text)
+
+    class InsertCommand(QtGui.QUndoCommand):
+        def __init__(self, doc):
+            QtGui.QUndoCommand.__init__(self)
+            self.doc = doc
+            self.old_text = doc.page().mainFrame().toHtml()
+
+        def redo(self):
+            self.doc.setHtml(self.old_text + '\nNew line.')
+
+        def undo(self):
+            self.doc.setHtml(self.old_text)
+
+    clear_action = Action(ClearCommand, is_available=lambda d: d)
+    insert_action = Action(InsertCommand, is_available=lambda d: d)
+    main_window.addToolbar('Toolbar 1', [clear_action, insert_action])
 
     for path in sys.argv[1:]:
         main_window.addDocument(Document(open(path).read(),
