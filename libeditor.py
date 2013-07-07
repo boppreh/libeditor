@@ -17,27 +17,38 @@ class Document(QtWebKit.QWebView):
         self.title = title
         self.undo_stack = QtGui.QUndoStack()
 
+    def refresh(self):
+        pass
+
 
 class Action(QtGui.QAction):
     """
-    Class for Actions that can be displayed on toolbars and menus, triggered
-    by shortcut and undone/redone.
+    Class for Actions that can be displayed on toolbars and menus and triggered
+    by shortcut.
     """
-    def __init__(self, label, redo, undo=None, shortcut=None, is_available=None):
+    def __init__(self, function, label=None, shortcut=None, is_available=None):
+        label = label or function.func_name.replace('_', ' ').title()
+        self.function = function
+        self.is_available = is_available or (lambda doc: True)
+
         QtGui.QAction.__init__(self, label, None)
-        self.redo = redo
-        self.undo = undo
-        self.shortcut = shortcut
-        self.is_available = is_available or (lambda: True)
-        self.setShortcut(shortcut)
-        self.triggered.connect(lambda: self.parent().execute(redo, undo, label))
+        self.triggered.connect(self.execute)
+
+        if shortcut is not None:
+            self.setShortcut(shortcut)
+
+    def execute(self):
+        document = self.parent().currentDocument()
+        result = self.function(document)
+        if isinstance(result, QtGui.QUndoCommand):
+            document.undo_stack.push(result)
+        self.parent().refresh()
 
     def refresh(self):
         """
         Updates the availability of this action.
         """
-        has_target = not self.undo or self.parent().currentDocument()
-        self.setEnabled(bool(has_target and self.is_available()))
+        self.setEnabled(self.is_available(self.parent().currentDocument()))
 
 
 class Tabbed(QtGui.QTabWidget):
@@ -135,7 +146,6 @@ class MainWindow(QtGui.QMainWindow):
             bar.addAction(action)
             self.actions.add(action)
             action.setParent(self)
-            action.refresh()
 
     def addDocument(self, document):
         """
@@ -161,6 +171,7 @@ class MainWindow(QtGui.QMainWindow):
         Updates the title and action availability.
         """
         if self.currentDocument():
+            self.currentDocument().refresh()
             title = '{} - {}'.format(self.centralWidget().title(),
                                      self.base_title)
             self.setWindowTitle(title)
@@ -169,17 +180,6 @@ class MainWindow(QtGui.QMainWindow):
 
         for action in self.actions:
             action.refresh()
-
-    def execute(self, redo, undo=None, text=''):
-        if undo:
-            command = QtGui.QUndoCommand(text, None)
-            command.redo = redo
-            command.undo = undo
-            self.currentDocument().undo_stack.push(command)
-        else:
-            redo()
-
-        self.refresh()
 
     def loadState(self):
         settings = QtCore.QSettings(self.base_title, '')
@@ -204,20 +204,11 @@ if __name__ == '__main__':
     main_window = MainWindow('Structured Editor')
 
     def p(s):
-        def print_():
+        def print_(doc):
             print(s)
         return print_ 
 
-    actions = [
-               Action('A1', p('did a1'), shortcut='1'),
-               None,
-               Action('A2', p('did a2'), p('undid a2'), shortcut='2'),
-               Action('A3', p('did a3'), p('undid a3'), shortcut='3'),
-               Action('A4', p('did a4'), p('undid a4'), shortcut='4'),
-               Action('A5', p('did a5'), p('undid a5'), shortcut='5'),
-              ]
-
-    main_window.addToolbar('Toolbar 1', actions)
+    main_window.addToolbar('Toolbar 1', map(Action, [p('a1'), p('a2')]))
 
     for path in sys.argv[1:]:
         main_window.addDocument(Document(open(path).read(),
