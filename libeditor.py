@@ -1,5 +1,24 @@
 from PyQt4 import QtCore, QtGui, QtWebKit
 
+
+class Action(QtGui.QAction):
+    """
+    Class for Actions that can be displayed on toolbars and menus, triggered
+    by hotkey and undone/redone.
+    """
+    def __init__(self, label, redo, undo=None, hotkey=None):
+        QtGui.QAction.__init__(self, label, None)
+        self.redo = redo
+        self.undo = undo
+        self.hotkey = hotkey
+
+    def command(self):
+        command = QtGui.QUndoCommand(self.text(), None)
+        command.redo = self.redo
+        command.undo = self.undo
+        return command 
+
+
 class Tabbed(QtGui.QTabWidget):
     """
     Tabbed interface with focus on usability:
@@ -60,28 +79,38 @@ class MainWindow(QtGui.QMainWindow):
         QtGui.QShortcut('Ctrl+Shift+Z', self,
                         lambda: self.currentDocument().undo_stack.redo())
 
-    def addMenuAction(self, menu, action):
-        raise NotImplemented()
-
-    def addToolbarAction(self, toolbar_name, label, redo, undo=None):
+    def addMenu(self, menu_name, actions):
         """
-        Adds a new action to the given toolbar. The toolbar is created if
-        necessary. By specifying an "undo" action, the action becomes tied to
-        the document and can be undone.
+        Creates a new menu with a list of actions.
         """
-        if toolbar_name not in self.toolbars:
-            self.toolbars[toolbar_name] = self.addToolBar(toolbar_name)
+        self._addActions(self.menuBar().addMenu(menu_name), actions)
 
-        action = self.toolbars[toolbar_name].addAction(label)
-        if undo:
-            def execute():
-                command = QtGui.QUndoCommand()
-                command.redo = redo
-                command.undo = undo
-                self.currentDocument().undo_stack.push(command)
+    def addToolbar(self, toolbar_name, actions):
+        """
+        Creates a new toolbar with a list of actions.
+        """
+        self._addActions(self.addToolBar(toolbar_name), actions)
+
+    def _addActions(self, bar, actions):
+        """
+        Adds a list of actions to a (menu|tool)bar.
+        """
+        for action in actions:
+            if action is None:
+                bar.addSeparator()
+                continue
+
+            bar.addAction(action)
+            if action.undo:
+                def execute(checked=None, action=action):
+                    self.currentDocument().undo_stack.push(action.command())
+            else:
+                execute = action.redo
+
             action.triggered.connect(execute)
-        else:
-            action.triggered.connect(redo)
+            if action.hotkey:
+                QtGui.QShortcut(action.hotkey, self, execute)
+
 
     def addDocument(self, text, label=None):
         """
@@ -114,14 +143,22 @@ if __name__ == '__main__':
     import sys, os
     app = QtGui.QApplication([__file__])
     main_window = MainWindow('Structured Editor')
-    def a():
-        print 'a'
-    def b():
-        print 'b'
-    main_window.addToolbarAction('Toolbar 1', 'A1', a, b)
-    main_window.addToolbarAction('Toolbar 1', 'A2', main_window.newDocument)
-    main_window.addToolbarAction('Toolbar 2', 'B1', main_window.newDocument)
-    main_window.addToolbarAction('Toolbar 2', 'B2', main_window.newDocument)
+
+    def p(s):
+        def print_():
+            print(s)
+        return print_ 
+
+    actions = [
+               Action('A1', p('did a1'), hotkey='1'),
+               None,
+               Action('A2', p('did a2'), p('undid a2'), hotkey='2'),
+               Action('A3', p('did a3'), p('undid a3'), hotkey='3'),
+               Action('A4', p('did a4'), p('undid a4'), hotkey='4'),
+               Action('A5', p('did a5'), p('undid a5'), hotkey='5'),
+              ]
+
+    main_window.addToolbar('Toolbar 1', actions)
 
     for path in sys.argv[1:]:
         main_window.add(open(path).read(), os.path.basename(path))
