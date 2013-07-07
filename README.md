@@ -30,6 +30,7 @@ Detailed Features
   - Documents can be opened by giving only the HTML and a label
   - Current QWebView widget can be accessed for easy modifications
   - Easy to add new toolbars and menus with their actions
+  - Title displays the current document name
   
 - Actions
   - Support for label, redo and undo functions
@@ -38,3 +39,4 @@ Detailed Features
   - Actions have application-wide shortcuts, regardless of toolbar visibility
   - Empty actions are rendered as separators
   - Actions without undo are considered global
+  - Availability defined by user-supplied function and automatically refreshed
