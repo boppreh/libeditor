@@ -1,5 +1,29 @@
 from PyQt4 import QtCore, QtGui, QtWebKit
 
+class BaseDocument(object):
+    """
+    Base class for documents supported by the editor.
+    """
+    untitled_count = 0
+
+    def __init__(self, title=None, widget=QtGui.QWidget):
+        self.title = title
+        self.undo_stack = QtGui.QUndoStack()
+        self.widget = widget
+
+        if title is None:
+            BaseDocument.untitled_count += 1
+            title = 'Untitled Document ' + str(self.untitled_count)
+
+
+class HtmlDocument(BaseDocument):
+    """
+    Document with HTML display.
+    """
+    def __init__(self, title=None, contents=''):
+        self.widget = QtWebKit.QWebView()
+        self.widget.setHtml(contents)
+
 
 class Action(QtGui.QAction):
     """
@@ -112,7 +136,6 @@ class MainWindow(QtGui.QMainWindow):
         self.setCentralWidget(Tabbed())
 
         self.base_title = title
-        self.untitled_count = 0
         self.actions = set()
 
         QtGui.QShortcut('Ctrl+N', self, self.newDocument)
@@ -151,20 +174,12 @@ class MainWindow(QtGui.QMainWindow):
             bar.addAction(action)
             action.setup(self)
 
-    def addDocument(self, text, label=None):
+    def addDocument(self, document):
         """
         Opens a new document in a new tab, displaying the given text as HTML.
         """
-        if label is None:
-            self.untitled_count += 1
-            label = 'Untitled Document ' + str(self.untitled_count)
-
-        contents = QtWebKit.QWebView()
-        contents.setHtml(text)
-        contents.undo_stack = QtGui.QUndoStack()
-        self.centralWidget().addTab(contents, label)
+        self.centralWidget().addTab(document, document.title)
         self.refresh()
-        return contents
 
     def newDocument(self):
         """

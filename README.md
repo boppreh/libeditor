@@ -7,10 +7,10 @@ editor-like programs.
 Main Features
 -------------
 
-- QWebView for displaying the contents (HTML)
+- QWebView for displaying document contents (HTML)
 - Multi-document support with tabs
 - Easy to create toolbars and menus
-- Actions have built-in support for shorcuts and undo/redo
+- Actions with built-in support for shorcuts and undo/redo
 
 
 Detailed Features
