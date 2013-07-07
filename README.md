@@ -10,7 +10,7 @@ Main Features
 - QWebView for displaying document contents (HTML)
 - Multi-document support with tabs
 - Easy to create toolbars and menus
-- Actions with built-in support for shorcuts and undo/redo
+- Actions with built-in support for shorcuts, undo/redo and greying out
 
 
 Detailed Features
@@ -27,18 +27,17 @@ Detailed Features
 - Main Window
   - Empty documents can be created with Ctrl+N
   - Unnamed documents are labeled "Untitled Document x"
-  - Documents can be opened by giving only the HTML and a label
-  - Current QWebView widget can be accessed for easy modifications
   - Easy to add new toolbars and menus with their actions
   - Title displays the current document name
   - "App" object is created automatically
   - Window size, position and toolbars are saved and loaded automatically
   
 - Actions
-  - Support for label, redo and undo functions
+  - Can contain a label
+  - Support for redo and undo functions
+  - Receives an availability function and refreshes automatically
+  - Can have shortcuts
   - Ctrl+Z and Ctrl+Shift+Z automatically undo and redo the last actions
   - Undo stack is kept in a per-document basis
-  - Actions can have shortcuts
-  - Empty actions are rendered as separators
   - Actions without undo are considered global
-  - Availability defined by user-supplied function and automatically refreshed
+  - 'None' actions are rendered as separators in toolbars and menus
