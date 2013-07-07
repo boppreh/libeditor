@@ -119,7 +119,6 @@ class MainWindow(QtGui.QMainWindow):
             bar.addAction(action)
             action.setup(self)
 
-
     def addDocument(self, text, label=None):
         """
         Opens a new document in a new tab, displaying the given text as HTML.
