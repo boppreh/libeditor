@@ -1,28 +1,21 @@
 from PyQt4 import QtCore, QtGui, QtWebKit
 
-class BaseDocument(object):
-    """
-    Base class for documents supported by the editor.
-    """
-    untitled_count = 0
-
-    def __init__(self, title=None, widget=QtGui.QWidget):
-        self.title = title
-        self.undo_stack = QtGui.QUndoStack()
-        self.widget = widget
-
-        if title is None:
-            BaseDocument.untitled_count += 1
-            title = 'Untitled Document ' + str(self.untitled_count)
-
-
-class HtmlDocument(BaseDocument):
+class Document(QtWebKit.QWebView):
     """
     Document with HTML display.
     """
+    untitled_count = 0
+
     def __init__(self, title=None, contents=''):
-        self.widget = QtWebKit.QWebView()
-        self.widget.setHtml(contents)
+        QtWebKit.QWebView.__init__(self)
+        self.setHtml(contents)
+
+        if title is None:
+            Document.untitled_count += 1
+            title = 'Untitled Document ' + str(self.untitled_count)
+
+        self.title = title
+        self.undo_stack = QtGui.QUndoStack()
 
 
 class Action(QtGui.QAction):
@@ -155,7 +148,7 @@ class MainWindow(QtGui.QMainWindow):
         """
         Opens a new empty document in a new tab.
         """
-        return self.addDocument('', None)
+        return self.addDocument(Document())
 
     def currentDocument(self):
         """
@@ -168,18 +161,18 @@ class MainWindow(QtGui.QMainWindow):
         Updates the title and action availability.
         """
         if self.currentDocument():
-            document_label = self.centralWidget().title()
-            new_title = '{} - {}'.format(document_label, self.base_title)
+            title = '{} - {}'.format(self.centralWidget().title(),
+                                     self.base_title)
+            self.setWindowTitle(title)
         else:
-            new_title = self.base_title
-        self.setWindowTitle(new_title)
+            self.setWindowTitle(self.base_title)
 
         for action in self.actions:
             action.refresh()
 
     def execute(self, redo, undo=None, text=''):
         if undo:
-            command = QtGui.QUndoCommand(text, self)
+            command = QtGui.QUndoCommand(text, None)
             command.redo = redo
             command.undo = undo
             self.currentDocument().undo_stack.push(command)
@@ -227,6 +220,7 @@ if __name__ == '__main__':
     main_window.addToolbar('Toolbar 1', actions)
 
     for path in sys.argv[1:]:
-        main_window.addDocument(open(path).read(), os.path.basename(path))
+        main_window.addDocument(Document(open(path).read(),
+                                         os.path.basename(path)))
 
     main_window.run()
