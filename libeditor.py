@@ -6,12 +6,13 @@ class Action(QtGui.QAction):
     Class for Actions that can be displayed on toolbars and menus, triggered
     by hotkey and undone/redone.
     """
-    def __init__(self, label, redo, undo=None, hotkey=None):
+    def __init__(self, label, redo, undo=None, hotkey=None, is_available=None):
         QtGui.QAction.__init__(self, label, None)
         self.redo = redo
         self.undo = undo
         self.hotkey = hotkey
         self.finished_setup = False
+        self.is_available = is_available or (lambda: True)
 
     def setup(self, parent):
         if self.finished_setup:
@@ -87,7 +88,7 @@ class MainWindow(QtGui.QMainWindow):
         self.setCentralWidget(Tabbed())
 
         self.untitled_count = 0
-        self.toolbars = {}
+        self.actions = set()
 
         QtGui.QShortcut('Ctrl+N', self, self.newDocument)
         QtGui.QShortcut('Ctrl+Z', self,
@@ -116,6 +117,7 @@ class MainWindow(QtGui.QMainWindow):
                 bar.addSeparator()
                 continue
 
+            self.actions.add(action)
             bar.addAction(action)
             action.setup(self)
 
@@ -145,6 +147,10 @@ class MainWindow(QtGui.QMainWindow):
         """
         return self.centralWidget().currentWidget()
 
+    def refresh(self):
+        for action in self.actions:
+            action.setEnabled(action.is_available())
+
 
 if __name__ == '__main__':
     import sys, os
@@ -163,10 +169,11 @@ if __name__ == '__main__':
                Action('A3', p('did a3'), p('undid a3'), hotkey='3'),
                Action('A4', p('did a4'), p('undid a4'), hotkey='4'),
                Action('A5', p('did a5'), p('undid a5'), hotkey='5'),
+               None,
+               Action('Disable', main_window.refresh),
               ]
 
     main_window.addToolbar('Toolbar 1', actions)
-    main_window.addMenu('Menu 1', actions)
 
     for path in sys.argv[1:]:
         main_window.add(open(path).read(), os.path.basename(path))
