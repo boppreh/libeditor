@@ -31,6 +31,8 @@ Detailed Features
   - Current QWebView widget can be accessed for easy modifications
   - Easy to add new toolbars and menus with their actions
   - Title displays the current document name
+  - "App" object is created automatically
+  - Window size, position and toolbars are saved and loaded automatically
   
 - Actions
   - Support for label, redo and undo functions

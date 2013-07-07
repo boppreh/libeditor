@@ -105,6 +105,8 @@ class MainWindow(QtGui.QMainWindow):
     tabs.
     """
     def __init__(self, title):
+        self.app = QtGui.QApplication([__file__])
+
         QtGui.QMainWindow.__init__(self)
         self.setWindowTitle(title)
         self.setCentralWidget(Tabbed())
@@ -123,13 +125,18 @@ class MainWindow(QtGui.QMainWindow):
         """
         Creates a new menu with a list of actions.
         """
-        self._addActions(self.menuBar().addMenu(menu_name), actions)
+        menu = self.menuBar().addMenu(menu_name)
+        self._addActions(menu, actions)
+        return menu
 
     def addToolbar(self, toolbar_name, actions):
         """
         Creates a new toolbar with a list of actions.
         """
-        self._addActions(self.addToolBar(toolbar_name), actions)
+        toolbar = self.addToolBar(toolbar_name)
+        toolbar.setObjectName(toolbar_name)
+        self._addActions(toolbar, actions)
+        return toolbar
 
     def _addActions(self, bar, actions):
         """
@@ -185,10 +192,26 @@ class MainWindow(QtGui.QMainWindow):
         for action in self.actions:
             action.refresh()
 
+    def loadState(self):
+        settings = QtCore.QSettings(self.base_title, '')
+        self.restoreGeometry(settings.value('geometry').toByteArray())
+        self.restoreState(settings.value('state').toByteArray())
+
+    def closeEvent(self, event):
+        settings = QtCore.QSettings(self.base_title, '')
+        settings.setValue('geometry', self.saveGeometry())
+        settings.setValue('state', self.saveState())
+        QtGui.QMainWindow.closeEvent(self, event)
+
+    def run(self):
+        self.loadState()
+        self.show()
+        exit(self.app.exec_())
+
+
 
 if __name__ == '__main__':
     import sys, os
-    app = QtGui.QApplication([__file__])
     main_window = MainWindow('Structured Editor')
 
     def p(s):
@@ -205,10 +228,9 @@ if __name__ == '__main__':
                Action('A5', p('did a5'), p('undid a5'), shortcut='5'),
               ]
 
-    main_window.addMenu('Toolbar 1', actions)
+    main_window.addToolbar('Toolbar 1', actions)
 
     for path in sys.argv[1:]:
-        main_window.add(open(path).read(), os.path.basename(path))
+        main_window.addDocument(open(path).read(), os.path.basename(path))
 
-    main_window.show()
-    exit(app.exec_())
+    main_window.run()
