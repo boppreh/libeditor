@@ -38,17 +38,20 @@ def main():
     def open_help(doc):
         message = 'Click on the toolbars and try Ctrl+Z and Ctrl+Shift+Z.'
         main_window.addDocument(Document('Help', message))
-    main_window.addToolbar('Help Toolbar', [Action(open_help, 'Help')])
 
-    random_action = Action(InsertRandomCommand, label='Insert Random',
-                           is_available=lambda d: d)
-    remove_action = Action(RemoveCommand, label='Remove',
-                           is_available=lambda d: d and len(d.text()) >= 1)
-    reverse_action = Action(ReverseCommand, label='Reverse',
-                            is_available=lambda d: d and len(d.text()) >= 2)
+    help_ = Action(open_help, 'Help')
+    new = Action(lambda d: main_window.newDocument(), 'New')
+    quit = Action(lambda d: exit(), 'Quit')
+    random = Action(InsertRandomCommand, label='Insert Random',
+                    is_available=lambda d: d)
+    remove = Action(RemoveCommand, label='Remove',
+                    is_available=lambda d: d and len(d.text()) >= 1)
+    reverse = Action(ReverseCommand, label='Reverse',
+                     is_available=lambda d: d and len(d.text()) >= 2)
 
-    actions = [random_action, reverse_action, remove_action]
-    main_window.addToolbar('Toolbar', actions)
+    main_window.addToolbar('Toolbar', [random, reverse, remove])
+    main_window.addToolbar('Help Toolbar', [help_])
+    main_window.addMenu('File', [new, None, quit])
     main_window.addDocument(Document('My Empty Document', ''))
     main_window.run()
 
