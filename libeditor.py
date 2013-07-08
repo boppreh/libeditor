@@ -18,6 +18,12 @@ class Document(QtWebKit.QWebView):
         self.title = title
         self.undo_stack = QtGui.QUndoStack()
 
+    def html(self):
+        return str(self.page().mainFrame().toHtml())
+
+    def text(self):
+        return str(self.page().mainFrame().toPlainText())
+
     def refresh(self):
         pass
 
@@ -132,10 +138,16 @@ class MainWindow(QtGui.QMainWindow):
         self.actions = set()
 
         QtGui.QShortcut('Ctrl+N', self, self.newDocument)
-        QtGui.QShortcut('Ctrl+Z', self,
-                        lambda: self.currentDocument().undo_stack.undo())
-        QtGui.QShortcut('Ctrl+Shift+Z', self,
-                        lambda: self.currentDocument().undo_stack.redo())
+        QtGui.QShortcut('Ctrl+Z', self, self.undo)
+        QtGui.QShortcut('Ctrl+Shift+Z', self, self.redo)
+
+    def undo(self):
+        self.currentDocument().undo_stack.undo()
+        self.refresh()
+
+    def redo(self):
+        self.currentDocument().undo_stack.redo()
+        self.refresh()
 
     def addMenu(self, menu_name, actions):
         """
@@ -221,31 +233,5 @@ class MainWindow(QtGui.QMainWindow):
 
 
 if __name__ == '__main__':
-    import sys, os
-    main_window = MainWindow('Structured Editor')
-
-    class ClearCommand(Command):
-        def redo(self):
-            self.old_text = self.doc.page().mainFrame().toHtml()
-            self.doc.setHtml('')
-
-        def undo(self):
-            self.doc.setHtml(self.old_text)
-
-    class InsertCommand(Command):
-        def redo(self):
-            self.old_text = self.doc.page().mainFrame().toHtml()
-            self.doc.setHtml(self.old_text + '<br>New line.')
-
-        def undo(self):
-            self.doc.setHtml(self.old_text)
-
-    clear_action = Action(ClearCommand, is_available=lambda d: d)
-    insert_action = Action(InsertCommand, is_available=lambda d: d)
-    main_window.addToolbar('Toolbar 1', [clear_action, insert_action])
-
-    for path in sys.argv[1:]:
-        main_window.addDocument(Document(open(path).read(),
-                                         os.path.basename(path)))
-
-    main_window.run()
+    import example
+    example.main()
