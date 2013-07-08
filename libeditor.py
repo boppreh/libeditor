@@ -7,7 +7,7 @@ class Document(QtWebKit.QWebView):
     """
     untitled_count = 0
 
-    def __init__(self, title=None, contents=''):
+    def __init__(self, title=None, contents='', filepath=None):
         QtWebKit.QWebView.__init__(self)
         self.setHtml(contents)
 
@@ -16,7 +16,9 @@ class Document(QtWebKit.QWebView):
             title = 'Untitled Document ' + str(self.untitled_count)
 
         self.title = title
+        self.filepath = filepath
         self.undo_stack = QtGui.QUndoStack()
+        self.filetype = '*.*'
 
     def html(self):
         return str(self.page().mainFrame().toHtml())
@@ -30,6 +32,31 @@ class Document(QtWebKit.QWebView):
         nothing.
         """
         pass
+
+    def save(self):
+        """
+        Saves the document content to the original file, or opens a file dialog
+        if there was no original file. Marks the document as clean and allows
+        the tab to be closed without confirmation.
+        """
+        path = self.filepath or str(QtGui.QFileDialog.getSaveFileName(self, 'Save as', self.title, filter=self.filetype))
+
+        if path:
+            with open(self.filepath) as f:
+                f.write(self.contents)
+
+            self.undo_stack.setClean()
+            return True
+        else:
+            return False
+
+    def save_as(self, path=None):
+        """
+        Saves the document content to the file specified by `path`, or opens
+        the file dialog is none is given.
+        """
+        self.filepath = path
+        return self.save()
 
     def close(self):
         """
