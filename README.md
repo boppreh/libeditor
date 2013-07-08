@@ -68,3 +68,19 @@ Detailed behavior
   - Undo stack is kept in a per-document basis
   - Actions without undo are considered global
   - 'None' actions are rendered as separators in toolbars and menus
+
+
+Future features
+---------------
+
+- Track which documents were changed
+- Invoke a method on Document when trying to close it
+- Confirm closing documents with unsaved changes
+- Bind documents to file paths
+- Implement open/save/saveas, going through a user supplied function
+- Support toolbars with variable number of actions
+- Enable default menus (File, Edit)
+- Macro support? Technically the undo_stack already has it
+- Status bar?
+- Auto updater?
+- Reset geomtry/state?
