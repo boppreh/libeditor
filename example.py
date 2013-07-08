@@ -55,6 +55,7 @@ def main():
     # Similar to the help function, but using a simple lambda to shave off the
     # first argument.
     new = Action(lambda d: main_window.newDocument(), 'New')
+    open_ = Action(lambda d: main_window.openDocument(), 'Open')
     quit = Action(lambda d: exit(), 'Quit')
 
     # Actions that create Commands. `is_available` evaluates if the action
@@ -71,7 +72,7 @@ def main():
     # Same with the help action.
     main_window.addToolbar('Help Toolbar', [help_])
     # Adding a menu is exactly like adding a toolbar.
-    main_window.addMenu('File', [new, None, quit])
+    main_window.addMenu('File', [new, open_, None, quit])
 
     # Creates a new empty document with a given title.
     main_window.addDocument(Document('My Empty Document', ''))

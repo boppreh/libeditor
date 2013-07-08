@@ -1,5 +1,5 @@
 from PyQt4 import QtCore, QtGui, QtWebKit
-import re
+import re, os
 
 class Document(QtWebKit.QWebView):
     """
@@ -233,6 +233,16 @@ class MainWindow(QtGui.QMainWindow):
         """
         self.centralWidget().addTab(document, document.title)
         self.refresh()
+
+    def openDocument(self):
+        """
+        Prompts the user to select a file location to open in a new document.
+        """
+        path = str(QtGui.QFileDialog.getOpenFileName(self, filter='*.*'))
+        if path is not None:
+            title = os.path.basename(path)
+            contents = open(path).read()
+            self.addDocument(Document(title, contents, path))
 
     def newDocument(self):
         """

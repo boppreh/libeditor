@@ -87,3 +87,4 @@ Future features
 - Status bar?
 - Auto updater?
 - Reset geomtry/state?
+- Fix title bug when file is saved with different name
