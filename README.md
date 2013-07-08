@@ -58,6 +58,7 @@ Detailed behavior
   - Title displays the current document name
   - "App" object is created automatically
   - Window size, position and toolbars are saved and loaded automatically
+  - Method to quickly add a standard 'File' menu
   
 - Actions
   - Can contain a label
@@ -80,7 +81,6 @@ Detailed behavior
 Future features
 ---------------
 
-- Implement open/save/saveas, going through a user supplied function
 - Support toolbars with variable number of actions
 - Enable default menus (File, Edit)
 - Macro support? Technically the undo_stack already has it

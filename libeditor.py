@@ -185,7 +185,6 @@ class MainWindow(QtGui.QMainWindow):
         self.base_title = title
         self.actions = set()
 
-        QtGui.QShortcut('Ctrl+N', self, self.newDocument)
         QtGui.QShortcut('Ctrl+Z', self, self.undo)
         QtGui.QShortcut('Ctrl+Shift+Z', self, self.redo)
 
@@ -196,6 +195,25 @@ class MainWindow(QtGui.QMainWindow):
     def redo(self):
         self.currentDocument().undo_stack.redo()
         self.refresh()
+
+    def addFileMenu(self):
+        """
+        Adds a standard "File" menu with New, Open, Save, Save as and Quit
+        actions.
+        """
+        actions = [
+            Action(lambda d: self.newDocument(), '&New', 'Ctrl+N'),
+            Action(lambda d: self.openDocument(), '&Open...', 'Ctrl+O'),
+            None,
+            Action(lambda d: self.currentDocument().save(), '&Save', 'Ctrl+S',
+                   lambda d: self.currentDocument()),
+            Action(lambda d: self.currentDocument().save_as(), 'Save &as...',
+                   'Ctrl+Alt+S',
+                   lambda d: self.currentDocument()),
+            None,
+            Action(lambda d: exit(), '&Quit', 'Ctrl+Q'),
+        ]
+        self.addMenu('&File', actions)
 
     def addMenu(self, menu_name, actions):
         """
