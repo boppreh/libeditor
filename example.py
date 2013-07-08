@@ -14,29 +14,29 @@ class InsertRandomCommand(Command):
         self.char = choice(ascii_letters)
 
     def redo(self):
-        self.doc.setHtml(self.doc.text() + self.char)
+        self.doc.contents += self.char
 
     def undo(self):
-        self.doc.setHtml(self.doc.text()[:-1])
+        self.doc.contents = self.doc.contents[:-1]
 
 class RemoveCommand(Command):
     # We don't need to set anything in the constructor, so we use the default
     # one from the superclass.
     def redo(self):
-        old_text = self.doc.text() 
+        old_text = self.doc.contents
         self.char = old_text[-1]
-        self.doc.setHtml(old_text[:-1])
+        self.doc.contents = old_text[:-1]
 
     def undo(self):
-        self.doc.setHtml(self.doc.text() + self.char)
+        self.doc.contents += self.char
 
 class ReverseCommand(Command):
     def redo(self):
-        self.old_text = self.doc.text()
-        self.doc.setHtml(''.join(reversed(self.old_text)))
+        self.old_text = self.doc.contents
+        self.doc.contents = ''.join(reversed(self.old_text))
 
     def undo(self):
-        self.doc.setHtml(self.old_text)
+        self.doc.contents = self.old_text
 
 
 def main():
@@ -62,9 +62,9 @@ def main():
     random = Action(InsertRandomCommand, label='Insert Random',
                     is_available=lambda d: d)
     remove = Action(RemoveCommand, label='Remove',
-                    is_available=lambda d: d and len(d.text()) >= 1)
+                    is_available=lambda d: d and len(d.contents) >= 1)
     reverse = Action(ReverseCommand, label='Reverse',
-                     is_available=lambda d: d and len(d.text()) >= 2)
+                     is_available=lambda d: d and len(d.contents) >= 2)
 
     # Creates a new toolbar with the three Actions created above.
     main_window.addToolbar('Toolbar', [random, reverse, remove])

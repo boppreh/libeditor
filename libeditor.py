@@ -9,29 +9,22 @@ class Document(QtWebKit.QWebView):
 
     def __init__(self, title=None, contents='', filepath=None):
         QtWebKit.QWebView.__init__(self)
-        self.setHtml(contents)
 
         if title is None:
             Document.untitled_count += 1
             title = 'Untitled Document ' + str(self.untitled_count)
 
         self.title = title
+        self.contents = contents
         self.filepath = filepath
         self.undo_stack = QtGui.QUndoStack()
         self.filetype = '*.*'
 
-    def html(self):
-        return str(self.page().mainFrame().toHtml())
-
-    def text(self):
-        return str(self.page().mainFrame().toPlainText())
-
     def refresh(self):
         """
-        Updates the document after a command has been executed. By default does
-        nothing.
+        Updates the document after a command has been executed.
         """
-        pass
+        self.setHtml(self.contents)
 
     def save(self):
         """
