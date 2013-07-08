@@ -25,7 +25,20 @@ class Document(QtWebKit.QWebView):
         return str(self.page().mainFrame().toPlainText())
 
     def refresh(self):
+        """
+        Updates the document after a command has been executed. By default does
+        nothing.
+        """
         pass
+
+    def close(self):
+        """
+        Attempts to close the document, possibly asking the user for
+        confirmation. Should return whether the document could be closed or
+        not.
+        """
+        print('close')
+        return self.undo_stack.isClean()
 
 
 class Action(QtGui.QAction):
@@ -107,7 +120,8 @@ class Tabbed(QtGui.QTabWidget):
         self.parent().refresh()
 
     def _close_tab(self, tab):
-        self.removeTab(tab)
+        if self.widget(tab).close():
+            self.removeTab(tab)
 
     def mouseReleaseEvent(self, event):
         if event.button() == QtCore.Qt.MiddleButton:
