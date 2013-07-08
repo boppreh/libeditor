@@ -205,11 +205,8 @@ class MainWindow(QtGui.QMainWindow):
             Action(lambda d: self.newDocument(), '&New', 'Ctrl+N'),
             Action(lambda d: self.openDocument(), '&Open...', 'Ctrl+O'),
             None,
-            Action(lambda d: self.currentDocument().save(), '&Save', 'Ctrl+S',
-                   lambda d: self.currentDocument()),
-            Action(lambda d: self.currentDocument().save_as(), 'Save &as...',
-                   'Ctrl+Alt+S',
-                   lambda d: self.currentDocument()),
+            Action(lambda d: d.save(), '&Save', 'Ctrl+S', lambda d: d),
+            Action(lambda d: d.save_as(), 'Save &as...', 'Ctrl+Alt+S', lambda d: d),
             None,
             Action(lambda d: exit(), '&Quit', 'Ctrl+Q'),
         ]
