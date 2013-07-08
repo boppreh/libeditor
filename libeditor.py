@@ -39,24 +39,39 @@ class Document(QtWebKit.QWebView):
         if there was no original file. Marks the document as clean and allows
         the tab to be closed without confirmation.
         """
-        path = self.filepath or str(QtGui.QFileDialog.getSaveFileName(self, 'Save as', self.title, filter=self.filetype))
+        if not self.filepath:
+            return self.save_as()
 
-        if path:
-            with open(self.filepath) as f:
-                f.write(self.contents)
+        if self.filepath:
+            with open(self.filepath, 'w') as f:
+                f.write(str(self.contents))
 
             self.undo_stack.setClean()
             return True
         else:
             return False
 
-    def save_as(self, path=None):
+    def save_as(self):
         """
-        Saves the document content to the file specified by `path`, or opens
-        the file dialog is none is given.
+        Saves the document content to the original file, or opens the file
+        dialog is none is given.
         """
-        self.filepath = path
+        self.filepath = str(QtGui.QFileDialog.getSaveFileName(self, 'Save as',
+                                                              self.title,
+                                                              filter=self.filetype))
         return self.save()
+
+    def _confirm_unsaved_changes(self):
+        message = 'Do you want to save changes to {}?'.format(self.title)
+        buttons = QtGui.QMessageBox.Save | QtGui.QMessageBox.Discard | QtGui.QMessageBox.Cancel
+        result = QtGui.QMessageBox.warning(self, 'Close confirmation', message, buttons=buttons)
+
+        if result == QtGui.QMessageBox.Save:
+            return self.save()
+        elif result == QtGui.QMessageBox.Discard:
+            return True
+        elif result == QtGui.QMessageBox.Cancel:
+            return False
 
     def close(self):
         """
@@ -64,8 +79,7 @@ class Document(QtWebKit.QWebView):
         confirmation. Should return whether the document could be closed or
         not.
         """
-        print('close')
-        return self.undo_stack.isClean()
+        return self.undo_stack.isClean() or self._confirm_unsaved_changes()
 
 
 class Action(QtGui.QAction):
