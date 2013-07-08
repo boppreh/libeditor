@@ -21,8 +21,8 @@ Architecture
 
 The architecture is based on four concepts:
 
-- `Document` is the class that contain the data to be edited. It is a `QWidget`
-  object (by default QWebView), and it has a title, an `undo_stack` and a
+- `Document` is the class that contains the data to be edited. It is a `QWidget`
+  object (by default `QWebView`), and it has a title, an `undo_stack` and a
   `refresh()` method.
 
 - `Action` encapsulates a possible user action, such as opening a new document
