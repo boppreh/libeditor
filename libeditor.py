@@ -56,6 +56,21 @@ class Action(QtGui.QAction):
         self.setEnabled(bool(self.is_available(doc)))
 
 
+class Command(QtGui.QUndoCommand):
+    """
+    Class for actions performed that can be undone and redone.
+    """
+    def __init__(self, doc):
+        QtGui.QUndoCommand.__init__(self)
+        self.doc = doc
+
+    def redo(self):
+        raise NotImplemented()
+
+    def undo(self):
+        raise NotImplemented()
+
+
 class Tabbed(QtGui.QTabWidget):
     """
     Tabbed interface with focus on usability:
@@ -209,26 +224,18 @@ if __name__ == '__main__':
     import sys, os
     main_window = MainWindow('Structured Editor')
 
-    class ClearCommand(QtGui.QUndoCommand):
-        def __init__(self, doc):
-            QtGui.QUndoCommand.__init__(self)
-            self.doc = doc
-            self.old_text = doc.page().mainFrame().toHtml()
-
+    class ClearCommand(Command):
         def redo(self):
+            self.old_text = self.doc.page().mainFrame().toHtml()
             self.doc.setHtml('')
 
         def undo(self):
             self.doc.setHtml(self.old_text)
 
-    class InsertCommand(QtGui.QUndoCommand):
-        def __init__(self, doc):
-            QtGui.QUndoCommand.__init__(self)
-            self.doc = doc
-            self.old_text = doc.page().mainFrame().toHtml()
-
+    class InsertCommand(Command):
         def redo(self):
-            self.doc.setHtml(self.old_text + '\nNew line.')
+            self.old_text = self.doc.page().mainFrame().toHtml()
+            self.doc.setHtml(self.old_text + '<br>New line.')
 
         def undo(self):
             self.doc.setHtml(self.old_text)
