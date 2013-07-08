@@ -1,11 +1,14 @@
 libeditor
 =========
 
-`libeditor` is a library built around PyQt to quickly create
-editor-like programs. 
+`libeditor` is an architecture for building document editors. It strives to
+automatically provide functionality that a user might expect of such programs,
+such as undo/redo, interface customization, hotkey support and persistent
+configuration.
 
-Main Features
--------------
+
+Features
+---------
 
 - QWebView for displaying document contents (HTML)
 - Multi-document support with tabs
@@ -13,8 +16,32 @@ Main Features
 - Actions with built-in support for shorcuts, undo/redo and greying out
 
 
-Detailed Features
-----------------
+Architecture
+------------
+
+The architecture is based on four concepts:
+
+- `Document` is the class that contain the data to be edited. It is a `QWidget`
+  object (by default QWebView), and it has a title, an `undo_stack` and a
+  `refresh()` method.
+
+- `Action` encapsulates a possible user action, such as opening a new document
+  or inserting something in the current one. It has a `label` and `shortcut`, 
+  allowing it to be placed in menus or toolbars, where its availability (greyed
+  out or not) is defined by the parameter `is_available(doc)`. Its main
+  `function(doc)` may execute the action directly or return a `Command` to do
+  so.
+
+- `Command` is an action executed upon a specific document. The user must
+  extend the class and override its `redo()` and `undo()` methods.
+
+- `MainWindow` contains zero or more `Document`s displayed in tabs, toolbars
+  and menus containing `Action`s and supports opening new documents, redoing
+  and undoing commands out of the box.
+
+
+Detailed behavior
+-----------------
 
 - Tabs
   - Tabs can be reordered by dragging
