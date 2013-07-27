@@ -288,8 +288,11 @@ class MainWindow(QtGui.QMainWindow):
 
     def loadState(self):
         settings = QtCore.QSettings(self.base_title, '')
-        self.restoreGeometry(settings.value('geometry').toByteArray())
-        self.restoreState(settings.value('state').toByteArray())
+        geometry, state = settings.value('geometry'), settings.value('state')
+        if geometry:
+            self.restoreGeometry(geometry.toByteArray())
+        if state:
+            self.restoreState(state.toByteArray())
 
     def closeEvent(self, event):
         settings = QtCore.QSettings(self.base_title, '')
