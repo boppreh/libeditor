@@ -81,7 +81,7 @@ Detailed behavior
 Future features
 ---------------
 
-- Support toolbars with variable number of actions
+- Support dynamic toolbars (variable number of actions)
 - Enable default menus (File, Edit)
 - Macro support? Technically the undo_stack already has it
 - Status bar?

@@ -7,18 +7,20 @@ class Document(QtWebKit.QWebView):
     """
     untitled_count = 0
 
-    def __init__(self, title=None, contents='', filepath=None):
+    def __init__(self, contents='', path=None):
         QtWebKit.QWebView.__init__(self)
-
-        if title is None:
-            Document.untitled_count += 1
-            title = 'Untitled Document ' + str(self.untitled_count)
-
-        self.title = title
         self.contents = contents
-        self.filepath = filepath
         self.undo_stack = QtGui.QUndoStack()
         self.filetype = '*.*'
+
+        self.path = path
+        if path is not None:
+            self.title = os.path.basename(path)
+            self.filetype = '*' + os.path.splitext(self.path)[1]
+        else:
+            Document.untitled_count += 1
+            self.title = 'Untitled Document ' + str(self.untitled_count)        
+            self.filetype = '*.*'
 
     def refresh(self):
         """
@@ -175,8 +177,13 @@ class MainWindow(QtGui.QMainWindow):
     Class for a multi-document window, if automatic handling of actions and
     tabs.
     """
-    def __init__(self, title):
+    def __init__(self, title, document_class=Document):
+        """
+        Creates a new Main Window with a given title to edit documents of type
+        `document_class` that extends libeditor.Document.
+        """
         self.app = QtGui.QApplication([__file__])
+        self.document_class = document_class
 
         QtGui.QMainWindow.__init__(self)
         self.setWindowTitle(title)
@@ -255,15 +262,14 @@ class MainWindow(QtGui.QMainWindow):
         """
         path = str(QtGui.QFileDialog.getOpenFileName(self, filter='*.*'))
         if path is not None:
-            title = os.path.basename(path)
-            contents = open(path).read()
-            self.addDocument(Document(title, contents, path))
+            document = self.document_class(open(path).read(), path)
+            self.addDocument(document)
 
     def newDocument(self):
         """
         Opens a new empty document in a new tab.
         """
-        return self.addDocument(Document())
+        return self.addDocument(self.document_class())
 
     def currentDocument(self):
         """
@@ -290,9 +296,9 @@ class MainWindow(QtGui.QMainWindow):
         settings = QtCore.QSettings(self.base_title, '')
         geometry, state = settings.value('geometry'), settings.value('state')
         if geometry:
-            self.restoreGeometry(geometry.toByteArray())
+            self.restoreGeometry(geometry)
         if state:
-            self.restoreState(state.toByteArray())
+            self.restoreState(state)
 
     def closeEvent(self, event):
         settings = QtCore.QSettings(self.base_title, '')

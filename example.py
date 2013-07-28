@@ -47,7 +47,7 @@ def main():
     # Helper function that opens a new document with a help message.
     def open_help(doc):
         message = 'Click on the toolbars and try Ctrl+Z and Ctrl+Shift+Z.'
-        main_window.addDocument(Document('Help', message))
+        main_window.addDocument(Document(message, 'Help'))
 
     # Defines an Action with name and associated function.
     help_ = Action(open_help, 'Help')
@@ -75,7 +75,7 @@ def main():
     main_window.addMenu('File', [new, open_, None, quit])
 
     # Creates a new empty document with a given title.
-    main_window.addDocument(Document('My Empty Document', ''))
+    main_window.addDocument(Document('', 'My Empty Document'))
 
     # Shows the main window and starts the event loop.
     main_window.run()
