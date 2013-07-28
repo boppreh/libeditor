@@ -26,7 +26,7 @@ class Document(QtWebKit.QWebView):
         """
         Updates the document after a command has been executed.
         """
-        self.setHtml(self.contents)
+        self.setHtml(str(self.contents))
 
     def save(self):
         """
@@ -256,11 +256,13 @@ class MainWindow(QtGui.QMainWindow):
         self.centralWidget().addTab(document, document.title)
         self.refresh()
 
-    def openDocument(self):
+    def openDocument(self, path=None):
         """
         Prompts the user to select a file location to open in a new document.
         """
-        path = str(QtGui.QFileDialog.getOpenFileName(self, filter='*.*'))
+        if path is None:
+            path = str(QtGui.QFileDialog.getOpenFileName(self, filter='*.*'))
+            
         if path is not None:
             document = self.document_class(open(path).read(), path)
             self.addDocument(document)
